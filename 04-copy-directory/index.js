@@ -1,4 +1,3 @@
-const fs = require('fs');
 const fsPromises = require('fs/promises');
 const path = require('path');
 
@@ -9,23 +8,12 @@ const copyDir = async (pathDirCopy, pathDir) => {
     }
     await fsPromises.mkdir(pathDirCopy, { recursive: true });
     const contents = await fsPromises.readdir(pathDir);
-    contents.forEach((e) => {
-      fsPromises.writeFile(
-        path.join(pathDirCopy, e),
-        '',
-        (err) => {
-          if (err) throw err;
-        }
-      );
-      const readableStream = fs.createReadStream(path.join(pathDir, e), 'utf-8');
-      readableStream.on('data', chunk => {
-        fs.appendFile(
-          path.join(pathDirCopy, e),chunk,err => {
-            if (err) throw err;
-          }
-        );
-      });
-    });
+
+    for(const e of contents) {
+      await fsPromises.writeFile(path.join(pathDirCopy, e), '');
+      const fileContent = await fsPromises.readFile(path.join(pathDir, e), 'utf-8');
+      await fsPromises.appendFile(path.join(pathDirCopy, e), fileContent);
+    }
   } catch (err) {
     console.error(err.message);
   }
