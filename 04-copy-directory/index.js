@@ -7,12 +7,17 @@ const copyDir = async (pathDirCopy, pathDir) => {
       await fsPromises.rm(pathDirCopy, { recursive: true });
     }
     await fsPromises.mkdir(pathDirCopy, { recursive: true });
-    const contents = await fsPromises.readdir(pathDir);
+    const contents = await fsPromises.readdir(pathDir, { withFileTypes: true });
 
     for(const e of contents) {
-      await fsPromises.writeFile(path.join(pathDirCopy, e), '');
-      const fileContent = await fsPromises.readFile(path.join(pathDir, e), 'utf-8');
-      await fsPromises.appendFile(path.join(pathDirCopy, e), fileContent);
+      if (e.isFile() && /\.(png|jpe?g|gif|svg|eot|ttf|woff|woff2)$/i.test(e.name)) {
+        const fileContent = await fsPromises.readFile(path.join(pathDir, e.name));
+        await fsPromises.writeFile(path.join(pathDirCopy, e.name), fileContent, { encoding: 'binary' });
+      } else {
+        await fsPromises.writeFile(path.join(pathDirCopy, e.name), '');
+        const fileContent = await fsPromises.readFile(path.join(pathDir, e.name), 'utf-8');
+        await fsPromises.appendFile(path.join(pathDirCopy, e.name), fileContent);
+      }
     }
   } catch (err) {
     console.error(err.message);
